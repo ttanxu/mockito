@@ -287,6 +287,15 @@ public class InlineByteBuddyMockMakerTest extends AbstractByteBuddyMockMakerTest
                 .getOnly().getParameters().getOnly().getName()).isEqualTo("bar");
     }
 
+    @Test
+    public void test_cleanup_mock_clears_handler() {
+        MockCreationSettings<GenericSubClass> settings = settingsFor(GenericSubClass.class);
+        GenericSubClass proxy = mockMaker.createMock(settings, new MockHandlerImpl<GenericSubClass>(settings));
+        assertThat(mockMaker.getHandler(proxy)).isNotNull();
+        mockMaker.cleanUpMock(proxy);
+        assertThat(mockMaker.getHandler(proxy)).isNull();
+    }
+
     private static <T> MockCreationSettings<T> settingsFor(Class<T> type, Class<?>... extraInterfaces) {
         MockSettingsImpl<T> mockSettings = new MockSettingsImpl<T>();
         mockSettings.setTypeToMock(type);

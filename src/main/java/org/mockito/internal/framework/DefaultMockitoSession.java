@@ -6,9 +6,12 @@ package org.mockito.internal.framework;
 
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoFramework;
 import org.mockito.MockitoSession;
 import org.mockito.exceptions.misusing.RedundantListenerException;
+import org.mockito.internal.configuration.plugins.Plugins;
 import org.mockito.internal.exceptions.Reporter;
+import org.mockito.internal.junit.MockTracker;
 import org.mockito.internal.junit.TestFinishedEvent;
 import org.mockito.internal.junit.UniversalTestListener;
 import org.mockito.plugins.MockitoLogger;
@@ -20,13 +23,16 @@ public class DefaultMockitoSession implements MockitoSession {
 
     private final String name;
     private final UniversalTestListener listener;
+    private final MockTracker mockTracker;
 
-    public DefaultMockitoSession(List<Object> testClassInstances, String name, Strictness strictness, MockitoLogger logger) {
+    public DefaultMockitoSession(List<Object> testClassInstances, String name, Strictness strictness, MockitoLogger logger,
+                                 boolean trackAndCleanUpMocks) {
         this.name = name;
         listener = new UniversalTestListener(strictness, logger);
+        MockitoFramework framework = Mockito.framework();
         try {
             //So that the listener can capture mock creation events
-            Mockito.framework().addListener(listener);
+            framework.addListener(listener);
         } catch (RedundantListenerException e) {
             Reporter.unfinishedMockingSession();
         }
@@ -38,6 +44,18 @@ public class DefaultMockitoSession implements MockitoSession {
             //clean up in case 'initMocks' fails
             listener.setListenerDirty();
             throw e;
+        }
+
+        if (trackAndCleanUpMocks && (framework instanceof DefaultMockitoFramework)) {
+            mockTracker = new MockTracker(Plugins.getMockMaker());
+            try {
+                ((DefaultMockitoFramework) framework).addGlobalListener(mockTracker);
+            } catch (RedundantListenerException e) {
+                listener.setListenerDirty();
+                Reporter.multipleTrackingMockSession();
+            }
+        } else {
+            mockTracker = null;
         }
     }
 
@@ -56,7 +74,11 @@ public class DefaultMockitoSession implements MockitoSession {
         //Cleaning up the state, we no longer need the listener hooked up
         //The listener implements MockCreationListener and at this point
         //we no longer need to listen on mock creation events. We are wrapping up the session
-        Mockito.framework().removeListener(listener);
+        MockitoFramework framework = Mockito.framework();
+        framework.removeListener(listener);
+        if (mockTracker != null) {
+            ((DefaultMockitoFramework) framework).removeGlobalListener(mockTracker);
+        }
 
         //Emit test finished event so that validation such as strict stubbing can take place
         listener.testFinished(new TestFinishedEvent() {
@@ -74,6 +96,10 @@ public class DefaultMockitoSession implements MockitoSession {
         if (failure == null) {
             //Finally, validate user's misuse of Mockito framework.
             Mockito.validateMockitoUsage();
+        }
+
+        if (mockTracker != null) {
+            mockTracker.testFinished();
         }
     }
 }

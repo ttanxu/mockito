@@ -23,6 +23,7 @@ public class DefaultMockitoSessionBuilder implements MockitoSessionBuilder {
     private String name;
     private Strictness strictness;
     private MockitoSessionLogger logger;
+    private boolean trackAndCleanMocks;
 
     @Override
     public MockitoSessionBuilder initMocks(Object testClassInstance) {
@@ -61,6 +62,12 @@ public class DefaultMockitoSessionBuilder implements MockitoSessionBuilder {
     }
 
     @Override
+    public MockitoSessionBuilder trackAndCleanUpMocks() {
+        this.trackAndCleanMocks = true;
+        return this;
+    }
+
+    @Override
     public MockitoSession startMocking() {
         //Configure default values
         List<Object> effectiveTestClassInstances;
@@ -75,6 +82,7 @@ public class DefaultMockitoSessionBuilder implements MockitoSessionBuilder {
         }
         Strictness effectiveStrictness = this.strictness == null ? Strictness.STRICT_STUBS : this.strictness;
         MockitoLogger logger = this.logger == null ? Plugins.getMockitoLogger() : new MockitoLoggerAdapter(this.logger);
-        return new DefaultMockitoSession(effectiveTestClassInstances, effectiveName, effectiveStrictness, logger);
+        return new DefaultMockitoSession(effectiveTestClassInstances, effectiveName, effectiveStrictness, logger,
+                                         trackAndCleanMocks);
     }
 }

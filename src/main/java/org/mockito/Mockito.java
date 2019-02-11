@@ -10,7 +10,6 @@ import org.mockito.internal.InternalMockHandler;
 import org.mockito.internal.MockitoCore;
 import org.mockito.internal.creation.MockSettingsImpl;
 import org.mockito.internal.debugging.MockitoDebuggerImpl;
-import org.mockito.internal.framework.DefaultMockitoFramework;
 import org.mockito.internal.session.DefaultMockitoSessionBuilder;
 import org.mockito.internal.verification.VerificationModeFactory;
 import org.mockito.invocation.Invocation;
@@ -2978,7 +2977,7 @@ public class Mockito extends ArgumentMatchers {
     @Incubating
     @CheckReturnValue
     public static MockitoFramework framework() {
-        return new DefaultMockitoFramework();
+        return MOCKITO_CORE.framework();
     }
 
     /**

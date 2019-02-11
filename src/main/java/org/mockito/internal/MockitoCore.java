@@ -9,6 +9,7 @@ import org.mockito.MockSettings;
 import org.mockito.MockingDetails;
 import org.mockito.exceptions.misusing.NotAMockException;
 import org.mockito.internal.creation.MockSettingsImpl;
+import org.mockito.internal.framework.DefaultMockitoFramework;
 import org.mockito.internal.invocation.finder.VerifiableInvocationsFinder;
 import org.mockito.internal.listeners.VerificationStartedNotifier;
 import org.mockito.internal.progress.MockingProgress;
@@ -49,6 +50,8 @@ import static org.mockito.internal.verification.VerificationModeFactory.noMoreIn
 @SuppressWarnings("unchecked")
 public class MockitoCore {
 
+    private DefaultMockitoFramework framework = new DefaultMockitoFramework();
+
     public boolean isTypeMockable(Class<?> typeToMock) {
         return typeMockabilityOf(typeToMock).mockable();
     }
@@ -60,7 +63,7 @@ public class MockitoCore {
         MockSettingsImpl impl = MockSettingsImpl.class.cast(settings);
         MockCreationSettings<T> creationSettings = impl.build(typeToMock);
         T mock = createMock(creationSettings);
-        mockingProgress().mockingStarted(mock, creationSettings);
+        framework.mockingStarted(mock, creationSettings);
         return mock;
     }
 
@@ -91,7 +94,7 @@ public class MockitoCore {
 
         MockingProgress mockingProgress = mockingProgress();
         VerificationMode actualMode = mockingProgress.maybeVerifyLazily(mode);
-        mockingProgress.verificationStarted(new MockAwareVerificationMode(mock, actualMode, mockingProgress.verificationListeners()));
+        mockingProgress.verificationStarted(new MockAwareVerificationMode(mock, actualMode, framework.verificationListeners()));
         return mock;
     }
 
@@ -214,5 +217,9 @@ public class MockitoCore {
 
     public LenientStubber lenient() {
         return new DefaultLenientStubber();
+    }
+
+    public DefaultMockitoFramework framework() {
+        return framework;
     }
 }

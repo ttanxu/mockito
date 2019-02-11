@@ -913,4 +913,11 @@ public class Reporter {
                 "Previous MockitoSession was not concluded with 'finishMocking()'.",
                 "For examples of correct usage see javadoc for MockitoSession class."));
     }
+
+    public static void multipleTrackingMockSession() {
+        throw new MultipleTrackingMockSessionException(join(
+            "Multiple open sessions that track and clean up mocks detected.",
+            "There can only be at most one open session that tracks and cleans up mocks,",
+            "please finish previous session that tracks and clean up mocks before opening a new one."));
+    }
 }

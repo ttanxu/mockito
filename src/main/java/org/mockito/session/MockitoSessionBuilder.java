@@ -116,6 +116,26 @@ public interface MockitoSessionBuilder {
     MockitoSessionBuilder logger(MockitoSessionLogger logger);
 
     /**
+     * Enables mock tracking and cleanup.
+     *
+     * <p>When enabled the {@code MockitoSession} tracks all mocks and spies created in all threads between the {@code MockitoSession}
+     * is created and {@link MockitoSession#finishMocking()} is called. When {@link MockitoSession#finishMocking()} this
+     * {@code MockitoSession} cleans up internal states of all mocks and spies captured when the {@code MockitoSession}
+     * is open. Behaviors of any interaction to mocks and spies that have been cleaned up are undefined.
+     *
+     * <p>It's recommended to use this feature when using any inline mock maker. Due to limitation of JVM some mocks may
+     * not be correctly GCed when there are no strong references outside Mockito. Therefore enabling mock tracking and
+     * cleaning can prevent memory leaks.
+     *
+     * <p>There can only be at most one {@code MockitoSession} with this enabled at any given time.
+     *
+     * @return the same builder instance for fluent configuration of {@code MockitoSession}.
+     * @since 2.24.4
+     */
+    @Incubating
+    MockitoSessionBuilder trackAndCleanUpMocks();
+
+    /**
      * Starts new mocking session! Creates new {@code MockitoSession} instance to initialize the session.
      * At this point annotated fields are initialized per {@link #initMocks(Object)} method.
      * When you are done with the session it is required to invoke {@link MockitoSession#finishMocking()}.
